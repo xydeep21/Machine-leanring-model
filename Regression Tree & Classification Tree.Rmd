@@ -1,0 +1,96 @@
+---
+title: "Regression Tree & Classification Tree"
+author: "YUANXU"
+date: "10/23/2020"
+output: html_document
+---
+```{r}
+library(ISLR)
+library(tree)
+```
+## Classification Tree
+## Using OJ(orange juice data),split the data into training set and test set, this time we use real numbers not percentage
+```{r}
+attach(OJ)
+dim(OJ)
+set.seed(1)
+subset = sample(1:nrow(OJ),800)
+OJ.train = OJ[subset,]
+OJ.test = OJ[-subset,]
+dim(OJ.train)
+```
+## Build a tree model based on the training set the tree package will automatically pick the impoartant indicators
+```{r}
+tree.OJ = tree(Purchase~.,data = OJ.train)
+summary(tree.OJ)
+```
+##List the details of the tree and plot the tree
+```{r}
+tree.OJ
+plot(tree.OJ)
+text(tree.OJ)
+```
+##Predict the tree model with test data and build a confusion matrix and calculate the testerror
+```{r}
+tree.pred = predict(tree.OJ,OJ.test,type="class")
+table(tree.pred,OJ.test$Purchase)
+testeeror = 1-mean(tree.pred==OJ.test$Purchase)
+testeeror
+```
+## Using cross validation method to prune the tree and plot the MSE with K 
+```{r}
+cv.OJ = cv.tree(tree.OJ,FUN=prune.misclass)
+plot(cv.OJ$size,cv.OJ$dev,type = "b",xlab="Tree Size", ylab = "Dev")
+
+```
+##Using the best tree size and build a new tree model 
+```{r}
+prune.OJ=prune.misclass(tree.OJ,best=8)
+plot(prune.OJ)
+text(prune.OJ)
+
+```
+##Making new prediction
+```{r}
+tree.pred2=predict(prune.OJ,OJ.test,type="class")
+table(tree.pred2,OJ.test$Purchase)
+testerror2 = 1-mean(tree.pred2==OJ.test$Purchase)
+testerror2
+```
+## Then using Carseats data to build regression tree model for the Sales value
+```{r}
+fix(Carseats)
+set.seed(1)
+subset=sample(1:nrow(Carseats),200,replace = FALSE)
+Carseats_train=Carseats[subset,]
+Carseats_test=Carseats[-subset,]
+dim(Carseats_train)
+```
+##The tree package will automatically make regression tree or classification tree depends on the target value. If the target value is blooean type it will build classification tree and if the target value is numerical it will build regression tree
+```{r}
+tree.Carseats=tree(Sales~.,data=Carseats_train)
+summary(tree.Carseats)
+
+```
+```{r}
+plot(tree.Carseats)
+text(tree.Carseats,pretty = 0)
+```
+```{r}
+tree.pred=predict(tree.Carseats,Carseats_test)
+testerror = mean((tree.pred-Carseats_test$Sales)^2)
+testerror
+```
+##Using cross validation method to build a new regression tree model by changing the tree size
+```{r}
+cv.Carseats=cv.tree(tree.Carseats)
+names(cv.Carseats)
+plot(cv.Carseats$size,cv.Carseats$dev,type="b",xlab = "Tree size", ylab = "Deviance")
+
+```
+```{r}
+prune.Carseats=prune.tree(tree.Carseats,best=16)
+tree.pred1=predict(prune.Carseats,Carseats_test)
+testerror1 = mean((tree.pred1-Carseats_test$Sales)^2)
+testerror1
+```
