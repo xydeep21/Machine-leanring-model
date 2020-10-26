@@ -1,0 +1,58 @@
+---
+title: "Logistic Regression, LDA & QDA"
+author: "YUANXU"
+date: "10/26/2020"
+output: html_document
+---
+## Logistic Regreesion using Smarket data
+```{r}
+library(ISLR)
+attach(Smarket)
+df = na.omit(Smartket)
+head(df)
+```
+```{r}
+## Split data into two parts randomly cause the data is ranged by year and year also impact the Direction 
+set.seed(271)
+subset = sample(nrow(df),nrow(df)/3)
+train_set = df[-subset,]
+test_set = df[subset,]
+dim(test_set)
+```
+```{r}
+## The family = binomial indicates build logistic regression 
+df.glm = glm(Direction~.,data = train_set,family = binomial)
+summary(df.glm)
+```
+```{r}
+## Using confusing matrix and test error to the predict results
+df.prob = predict(df.glm,test_set,type="response")
+df.pred = rep("Up",416)
+df.pred[df.prob<0.5]="Down"
+table(df.pred,test_set$Direction)
+test_error = mean(df.pred==test_set$Direction)
+test_error
+```
+## Then using LDA model to predict the Direction using the same data 
+```{r}
+## the lac() will provide class as the predicted results
+library(MASS)
+lda_fit = lda(Direction~.,data = train_set)
+lda_prob = predict(lda_fit,test_set)
+table(lda_prob$class,test_set$Direction)
+test_error_lda = mean(lda_prob$class==test_set$Direction)
+test_error_lda
+```
+## Then using QDA model to predict the Direction using the same data
+```{r}
+qda_fit = qda(Direction~.,data = train_set)
+qda_prob = predict(qda_fit,test_set)
+table(qda_prob$class,test_set$Direction)
+test_error_qda = mean(qda_prob$class==test_set$Direction)
+test_error_qda
+```
+##Conclusion 
+# 1.When the real classification boundary is linear, LR and LDA usually perform better; when the real classification boundary is # generally nonlinear, QDA usually performs better
+# 2.Both LR and LDA will produce linear classification boundaries. The only difference between the two is that the coefficients  # of LR are obtained by calculating MSE, while the coefficients of LDA are calculated using the estimated values of the mean and #variance of the normal distribution; LR is suitable for two classification problems. , For multi-class problems, LDA is more #common
+#3.When the sample can be completely linearly classified, the LR parameter estimation will be unstable, and the LR method is not # applicable at this time
+#4. LDA model needs the features share the same variance but QDA does not.
