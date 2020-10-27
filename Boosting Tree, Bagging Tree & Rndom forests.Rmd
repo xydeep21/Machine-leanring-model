@@ -34,7 +34,7 @@ pred_rf = predict(rf_boston,data = test_set)
 plot(pred_rf,train_set$medv)
 mean((pred_rf-train_set$medv)^2)
 ```
-## Using cross validation method to find the best parameter for building Boost Trees
+## Using changing parameters for learning rate to find the best parameter for building Boost Trees
 ```{r}
 ## Load the gbm package and usgin the same boston data
 library(gbm)
