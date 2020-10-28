@@ -23,14 +23,14 @@ train = Boston[-subset,"medv"]
 ## mtry=13 indicates adding all 13 features in the model
 ## importance = "True" indicates calculating the importance score
 bag_boston = randomForest(medv~., data=train_set, mtry=13, importance=TRUE)
-pred_bag = predict(bag_boston,data = test_set)
+pred_bag = predict(bag_boston,test_set)
 plot(pred_bag,train_set$medv)
 mean((pred_bag-train_set$medv)^2)
 ```
 ```{r}
 ## mtry = 6 means each time only need 6 features to build Randomforest models
 rf_boston = randomForest(medv~., data = train_set , mtry =6 ,importance = TRUE)
-pred_rf = predict(rf_boston,data = test_set)
+pred_rf = predict(rf_boston,test_set)
 plot(pred_rf,train_set$medv)
 mean((pred_rf-train_set$medv)^2)
 ```
@@ -50,7 +50,7 @@ set.seed(271)
 gbm_pred = c()
 for (i in 1:length(lambda)){
   gbm_boston = gbm(medv~.,data=train_set,distribution = "gaussian",shrinkage = lambda[i],n.trees = 5000,interaction.depth = 4)
-  gbm_pred[i] = predict(gbm_boston, data=test_set,n.trees = 5000）
+  gbm_pred[i] = predict(gbm_boston, test_set,n.trees = 5000）
 }
 gbm_pred
 ```
