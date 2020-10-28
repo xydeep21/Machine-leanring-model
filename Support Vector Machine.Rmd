@@ -1,0 +1,58 @@
+---
+title: "Support Vector Machine"
+author: "YUANXU"
+date: "10/28/2020"
+output: html_document
+---
+## Using Orange Juice data to build a SVM model with linear kernel function which can be called 
+## Support Vector Classifier
+```{r}
+##Load packages and data
+library(ISLR)
+library(e1071)
+attach(OJ)
+oj = na.omit(OJ)
+set.seed(1)
+subset = sample(1:nrow(oj),800)
+train = oj[subset,]
+test = oj[-subset,]
+dim(test)
+```
+```{r}
+## Build the model with fixed cost and make prediction
+svc_oj = svm(Purchase~.,data = train, kernel= "linear",cost=0.01 )
+svc_pred = predict(svc_oj,test)
+table(svc_pred,test$Purchase)
+svc_error = 1-mean(svc_pred==test$Purchase)
+svc_error
+```
+```{r}
+## Using tune() function to do cross validation and tuning parameters 
+set.seed(1)
+tune_oj = tune(svm,Purchase~.,data = train,kernel="linear",ranges = list(cost=c(0.01,0.05,0.1,0.5,1,5,10)))
+best_tune = tune_oj$best.model
+tune_oj_pred = predict(best_tune,test)
+table(tune_oj_pred,test$Purchase)
+tune_error = 1-mean(tune_oj_pred==test$Purchase)
+tune_error
+increase_rate = ((1-tune_error)-(1-svc_error))/(1-svc_error)
+increase_rate
+## The model increased by 3%
+```
+## Builing a SVM model with polynomial kernel function 
+```{r}
+svm_oj = svm(Purchase~.,data = train,kernel = "polynomial", degree = 3,cost=0.01)
+svm_pred = predict(svm_oj,test)
+svm_error = 1-mean(svm_pred==test$Purchase)
+svm_error
+```
+```{r}
+## Using tune() function to tuning parameter fot both gamma, cost and make prediction
+set.seed(1)
+tune_svm = tune(svm,Purchase~.,data=train,kernel="radial",gamma=c(0.5,1,2,3,4,5),ranges = list(cost=c(0.01,0.05,0.1,0.5,1,5,10)))
+summary(tune_svm)
+best_svm = tune_svm$best.model
+bsvm_pred = predict(best_svm,test)
+bsvm_error = 1-mean(bsvm_pred==test$Purchase)
+bsvm_error
+```
