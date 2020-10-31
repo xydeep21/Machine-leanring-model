@@ -1,0 +1,68 @@
+---
+title: "GLM with different regulation methods"
+author: "YUANXU"
+date: "10/23/2020"
+output: html_document
+---
+# R Markdown Document
+
+Maths expression embedded in GitHub Markdown:
+
+$$
+E = \frac{mc^2}{\sqrt{1-\frac{v^2}{c^2}}}
+$$
+
+with some more inline Latex $\gamma$, $\lambda$, $\theta$
+## Using the College build in ISLR
+```{r}
+library(glmnet)
+library(ISLR) 
+attach(College) 
+dim(College)
+```
+##Randomly split the data into training set and test set each of them with 50% of origianl data
+```{r}
+set.seed(1) 
+College=na.omit(College)
+subset = sample(nrow(College),nrow(College)/2)
+train.college = College[subset,]
+test.college = College[-subset,]
+dim(test.college)
+```
+##Fit a linear model using MSE method on training set, make prediction based on this model and report the test error
+```{r}
+fit.lm = lm(Apps~.,data=train.college)
+summary(fit.lm)
+```
+```{r}
+pred.lm = predict(fit.lm,test.college)
+testerror = mean((pred.lm-test.college$Apps)**2)
+testerror
+```
+## Fit a ridge regression model on the training set, with the lambda chosen by cross-validation.
+```{r}
+train.mat = model.matrix(Apps~.,data=train.college)[,-1]
+test.mat = model.matrix(Apps~.,data=test.college)[,-1]
+## build a sequnce of number from 10^10 to 10^-2 and use cross validation(defualt 10 k) to decide lambda
+grid = 10^seq(10,-2,length=100)
+ridge.mod = glmnet(train.mat,train.college$Apps,alpha = 0,lambda =grid,thresh = 1e-12)
+ridge.cv = cv.glmnet(train.mat,train.college$Apps,alpha=0)
+plot(ridge.cv)
+```
+##predict the result with this new model and find the new MSE
+```{R}
+ridge.pred = predict(ridge.mod,s=ridge.cv$lambda.min,x=train.mat,y=train.college$Apps,newx = test.mat,exact=TRUE)
+summary(ridge.pred)
+mean((ridge.pred-test.college$Apps)**2)
+```
+## Using LASSO model to predict the LASSO.pred and find the new MSE.
+```{R}
+lass.mod = glmnet(train.mat,train.college$Apps,alpha = 1,lambda = grid,thresh = 1e-12)
+lass.cv = cv.glmnet(train.mat,train.college$Apps,alpha = 1)
+plot(lass.cv)
+```
+```{r}
+lass.pred = predict(lass.mod,s=lass.cv$lambda.min,x=train.mat,y=train.college$Apps,newx = test.mat,exact = TRUE)
+summary(ridge.pred)
+mean((lass.pred-test.college$Apps)**2)
+```
