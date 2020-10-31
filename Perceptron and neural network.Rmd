@@ -1,0 +1,84 @@
+---
+title: "Perceptron and neural network"
+author: "YUANXU"
+date: "10/30/2020"
+output: html_document
+---
+##Perceptron is the easiest model of neural network and a binary classifier.
+##Using iris data in R to build a perceptron
+```{r}
+##Load data iris and choose only first two classes to build the model
+library(ISLR)
+attach(iris)
+df = iris[1:100,]
+dim(df)
+```
+```{r}
+##Inorder to draw a 2 dimention plot to see how the perceptron works, choose only two features
+df <- data.frame(x1 = df[1:100,1],x2 = df[1:100, 2], y = c(rep(1, 50), rep(-1, 50)))
+```
+```{r}
+## Xs are the features, Y is the outcome variable, initial is the initial weight, t is iterate times
+SLP <- function(x, y, initial, t)
+{
+  x <- as.matrix(cbind(x0 = rep(1, 100), x));
+  w <- initial;
+  t1 <- 0;
+  while(t1<t)
+  {
+    t1 <- t1 + 1;
+    err <- 0;
+    for (i in 1:100)
+    {
+      if(sign(w%*%x[i,])!=y[i])
+      {
+        err = err + 1;
+        w = w + y[i]*x[i,]
+      }
+    }
+    if(!err) break
+  }
+  return(list(w = w, t = t1, err = err))
+}
+result = SLP(df[,1:2],df[,3],initial = c(rep(0.01,3)),t=1000) 
+result
+```
+```{r}
+## Plot the perceptron and check the result with x0=126.0,x1=-79.,x2=101.4 wchich perfect matched truth 
+plot(4:8, 1:5, type = "n", xlab = "Sepal.Length", ylab = "Sepal.Width")
+points(df[0:50,1], df[0:50,2], col = "red")
+points(df[51:100,1], df[51:100,2], col = "green")
+abline(a = -result$w[1]/result$w[3], b = -result$w[2]/result$w[3])
+```
+##Using the same data and "neuralnet" package to build a neural network model
+```{r}
+library(neuralnet)
+library(nnet)
+set.seed(271)
+data = iris
+subset = sample(nrow(data),nrow(data)*0.7)
+train = data[subset,]
+test = data[-subset,]
+dim(train)
+dim(test)
+```
+```{r}
+nn = neuralnet(train$Species~.,data = train,linear.output = F,hidden = 2)
+nn$weights
+plot(nn,rep = "best")
+```
+```{r}
+## our nn_pred is boolean value so choose the max value as our result
+nn_pred = predict(nn,test,type="response")
+nn_result = max.col(nn_pred)
+
+```
+```{r}
+## we carete numeric value for the classes and calculate the error rate
+a = sub("setosa","1",test$Species)
+b = sub("versicolor","2",a)
+c =sub("virginica","3",b)
+table(nn_result,c)
+nn_error = 1-mean(nn_result==c)
+nn_error
+```
