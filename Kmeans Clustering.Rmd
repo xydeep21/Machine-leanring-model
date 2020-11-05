@@ -1,0 +1,80 @@
+---
+title: "Kmeans Clustering"
+author: "YUANXU"
+date: "11/3/2020"
+output: html_document
+---
+## First using the Kmeans package to conduct a clustering model based on iris data
+```{r}
+set.seed(271)
+attach(iris)
+## choose only two features in order to plot the result on a 2d plot
+df = iris[1:2]
+kc = kmeans(df,3,nstart = 100)
+table(kc$cluster,as.integer(iris$Species))
+test_error = 1-mean(kc$cluster==as.integer(iris$Species))
+test_error
+```
+```{r}
+##Plot the point
+plot(df[c(1,2)],
+     col=kc$cluster,pch=as.integer(iris$Species))
+```
+##Using self-build functions to conduct Kmeans algorithm
+```{r}
+## Euclidean distance function
+Eudist<-function(x,y){
+  distance<-apply(sqrt((x-y)^2),1,sum)
+  return (distance)
+}
+## Initial center point functions
+initPoints<-function(dataset,k){
+  n=ncol(dataset)
+  centerPointSet<-matrix(data = NA,nrow = k,ncol = n)
+  for (i in 1:n){
+    range=max(dataset[,i])-min(dataset[,i])
+    centerPointSet[,i]=min(dataset[,i])+range*runif(k) 
+  }
+  return(centerPointSet)
+}
+```
+```{r}
+
+##Kmeans Clustering main functions
+customKmeans<-function(dataSet,k){
+  m=nrow(dataSet) 
+  pointProperty=matrix(data=0,nrow = m,ncol = 2,byrow = FALSE,dimnames = NULL) 
+  centroid=initPoints(dataSet,k)
+  colnames(centroid)=colnames(dataSet)
+  changeFlag=TRUE
+  while(changeFlag){
+    changeFlag=FALSE
+    for (i in 1:m) {
+      minDist=Inf 
+      minIndex=-1 
+      for (j in 1:k) {
+        distIJ=Eudist(dataSet[i,],centroid[j,]) 
+        if(is.na(distIJ)) distIJ = Inf
+        if(distIJ<minDist){
+          minDist=distIJ    
+          minIndex=j  
+        }
+        
+        if(pointProperty[i,1]!= minIndex) {
+          changeFlag=TRUE 
+          pointProperty[i,1]= minIndex 
+        }
+        pointProperty[i,2]=minDist^2  
+      }
+    }
+    for(cent in 1:k){
+     newCluster=dataSet[which(pointProperty[,1]==cent),] 
+     centroid[k,]=apply(newCluster,2,mean)
+    }
+  }
+  out = list(pointProperty = pointProperty ,centroid = centroid) 
+  return (out)
+}
+
+k_means<-customKmeans(df,3)
+```
