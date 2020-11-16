@@ -4,7 +4,7 @@ author: "YUANXU"
 date: "10/28/2020"
 output: html_document
 ---
-## Using Orange Juice data to build a SVM model with linear kernel function which can be called 
+## Using Orange Juice data to build a SVM model with linear kernel function to do linear classification
 ## Support Vector Classifier
 ```{r}
 ##Load packages and data
